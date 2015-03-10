@@ -18,3 +18,19 @@ U=function(r){#scalar function. Returns potential energy of r-type object
   }
   sum
 }
+gU=function(r){#returns gradient of r object in same, N*3, form
+  N=dim(r)[1]
+  frame=data.frame(x=0,y=0,z=0)
+  for(i in 1:N){
+    for(j in 1:3){
+      sum=0
+      for(k in 1:N){
+        if(k!=i){
+          sum=sum+(r[i,j]-r[k,j])/(sum((r[i,]-r[k,])^2)^4)
+        }
+      }
+      frame[i,j]=2*r[i,j]-6*sum
+    }
+  }
+  frame
+}
