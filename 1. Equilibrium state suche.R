@@ -36,7 +36,7 @@ gU=function(r){#returns gradient of r object in same, N*3, form
 #gradient descent cycle
 l=1         #lambda
 K=1000     #number of grad descent steps
-N=27       #number of particles
+N=17       #number of particles
 r=init(N)
 for(k in 1:K){
   gu=gU(r)
