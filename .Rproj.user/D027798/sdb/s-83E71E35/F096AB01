@@ -1,12 +1,12 @@
 {
-    "contents" : "init=function(N,sd=1){#generates N particles with x,y,z random coordinates\n  x=rnorm(N,sd=sd)\n  y=rnorm(N,sd=sd)\n  z=rnorm(N,sd=sd)\n  data.frame(x=x,y=y,z=z)\n}\nU=function(r){#scalar function. Returns potential energy of r-type object\n  N=dim(r)[1]\n  sum=0\n  for(i in 1:N){\n    sum1=0\n    if(i!=N){\n      for(j in (i+1):N){\n        sum1=sum1+sum((r[i,]-r[j,])^2)^(-6)\n      }\n    }\n    sum=sum1+sum(r[i,]^2)\n  }\n  sum\n}\ngU=function(r){#returns gradient of r object in same, N*3, form\n  N=dim(r)[1]\n  frame=data.frame(x=0,y=0,z=0)\n  for(i in 1:N){\n    for(j in 1:3){\n      sum=0\n      for(k in 1:N){\n        if(k!=i){\n          sum=sum+(r[i,j]-r[k,j])/(sum((r[i,]-r[k,])^2)^4)\n        }\n      }\n      frame[i,j]=2*r[i,j]-6*sum\n    }\n  }\n  frame\n}",
+    "contents" : "init=function(N,sd=1){#generates N particles with x,y,z random coordinates\n  x=rnorm(N,sd=sd)\n  y=rnorm(N,sd=sd)\n  data.frame(x=x,y=y)\n}\nU=function(r){#scalar function. Returns potential energy of r-type object\n  N=dim(r)[1]\n  sum=0\n  for(i in 1:N){\n    sum1=0\n    if(i!=N){\n      for(j in (i+1):N){\n        sum1=sum1+sum((r[i,]-r[j,])^2)^(-6)\n      }\n    }\n    sum=sum1+sum(r[i,]^2)\n  }\n  sum\n}\ngU=function(r){#returns gradient of r object in same, N*3, form\n  N=dim(r)[1]\n  frame=data.frame(x=0,y=0)\n  for(i in 1:N){\n    for(j in 1:2){\n      sum=0\n      for(k in 1:N){\n        if(k!=i){\n          sum=sum+(r[i,j]-r[k,j])/(sum((r[i,]-r[k,])^2)^4)\n        }\n      }\n      frame[i,j]=2*r[i,j]-6*sum\n    }\n  }\n  frame\n}\n#gradient descent cycle\nl=1         #lambda\nK=1000     #number of grad descent steps\nN=17       #number of particles\nr=init(N)\nfor(k in 1:K){\n  gu=gU(r)\n  if(U(r-l*gu)<U(r)){\n    r=r-l*gu\n  }\n  else{\n    l=l/2\n  }\n  print(c(k,U(r),l))\n}",
     "created" : 1426026870825.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "0|22|5|0|\n6|14|19|0|\n20|15|35|0|\n",
-    "hash" : "3959169604",
+    "folds" : "0|22|4|0|\n5|14|18|0|\n",
+    "hash" : "1121165743",
     "id" : "F096AB01",
-    "lastKnownWriteTime" : 1426028454,
+    "lastKnownWriteTime" : 1426029730,
     "path" : "C:/Repos/Cluster2.2/1. Equilibrium state suche.R",
     "project_path" : "1. Equilibrium state suche.R",
     "properties" : {
