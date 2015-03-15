@@ -13,7 +13,7 @@ U=function(r){#scalar function. Returns potential energy of r-type object
         sum1=sum1+sum((r[i,]-r[j,])^2)^(-6)
       }
     }
-    sum=sum1+sum(r[i,]^2)
+    sum=sum+sum1+sum(r[i,]^2)
   }
   sum
 }
@@ -42,9 +42,9 @@ for(k in 1:K){
   gu=gU(r)
   if(U(r-l*gu)<U(r)){
     r=r-l*gu
-  }
-  else{
+  }else{
     l=l/2
   }
   print(c(k,U(r),l))
 }
+
