@@ -63,7 +63,11 @@ reinit<-function(N=17){
 #temperature function
 temp<-function(r, sd=1){
   N=dim(r)[1]
-  data.frame(x=r$x+rnorm(N,sd=sd),y=r$y+rnorm(N,sd=sd))
+  vx=rnorm(N,sd=sd)
+  vx=(vx-sum(vx)/length(vx))
+  vy=rnorm(N,sd=sd)
+  vy=(vy-sum(vy)/length(vy))
+  data.frame(x=r$x+rnorm(N,sd=sd),y=r$y+rnorm(N,sd=sd),vx=vx,vy=vy)
 }
 
 #gradient descent cycle
