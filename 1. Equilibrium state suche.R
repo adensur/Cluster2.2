@@ -15,6 +15,26 @@ U=function(r){#scalar function. Returns potential energy of r-type object
   y=(x[,4]-x[,2])^2+(x[,5]-x[,3])^2
   sum(y^(-3))/2+sum(r^2)
 }
+U3=function(r){
+  sum(mapply(function(xi,yi) {
+    sum(unlist(mapply(function(xk,yk) {
+      if(xi!=xk & yi!=yk){
+      ((xi-xk)^2+(yi-yk)^2)^(-3)
+      }
+    },r$x,r$y)))
+  },r$x,r$y))/2+sum(r$x^2)+sum(r$y^2)
+}#U rewritten as mapply(). It is not faster!
+U4=function(r){
+  N=dim(r)[1]
+  if(N>2){
+  sum(sapply(1:(N-1),function(i) {
+    sum(sapply((i+1):N,function(k){
+      ((r$x[i]-r$x[k])^2+(r$y[i]-r$y[k])^2)^(-3)
+    }))
+  }))+sum(r$x^2)+sum(r$y^2)
+  }
+  
+}#U rewritten as sapply(). It is not faster!
 U2=function(r){#scalar function. Returns potential energy of r-type object
   N=dim(r)[1]
   sum=0
