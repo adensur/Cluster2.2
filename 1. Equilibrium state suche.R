@@ -67,7 +67,11 @@ temp<-function(r, sd=1){
   vx=(vx-sum(vx)/length(vx))
   vy=rnorm(N,sd=sd)
   vy=(vy-sum(vy)/length(vy))
-  data.frame(x=r$x+rnorm(N,sd=sd),y=r$y+rnorm(N,sd=sd),vx=vx,vy=vy)
+  data.frame(x=r$x,y=r$y,vx=vx,vy=vy)
+}
+E<-function(r){
+  N=dim(r)[1]
+  
 }
 
 #gradient descent cycle
