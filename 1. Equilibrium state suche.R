@@ -71,9 +71,13 @@ temp<-function(r, sd=1){
 }
 E<-function(r){
   N=dim(r)[1]
-  
+  U(r[,1:2])+sum(r$vx^2)+sum(r$vy^2)
 }
 
+#chechking deltaE ~ sd dependance:
+sd=seq(0,100,by=0.05)
+Es=sapply(sd,function(x) E(temp(r,x)))
+plot(sd,Es,type="l")
 #gradient descent cycle
 
 for(n in 1:40){
