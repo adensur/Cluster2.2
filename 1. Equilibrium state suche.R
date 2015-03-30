@@ -57,6 +57,15 @@ gU2=function(r){#returns gradient of r object in same, N*3, form
   }
   frame
 }#initial one
+reinit<-function(N=17){
+  readRDS(file=paste("data/",N,".RDS",sep=""))
+}
+#temperature function
+temp<-function(r, sd=1){
+  N=dim(r)[1]
+  data.frame(x=r$x+rnorm(N,sd=sd),y=r$y+rnorm(N,sd=sd))
+}
+
 #gradient descent cycle
 
 for(n in 1:40){
@@ -78,3 +87,6 @@ filenum=paste("data/",N,".RDS",sep="")
 saveRDS(r,filenum)
 print(n)
 }
+
+
+
