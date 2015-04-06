@@ -91,15 +91,15 @@ temp<-function(r, sd=1){
 }
 E<-function(r){
   N=dim(r)[1]
-  U(r[,1:2])+sum(r$vx^2)+sum(r$vy^2)
+  U(r[,1:2])+sum(r$vx^2)/2+sum(r$vy^2)/2
 }
 
 #checking deltaE ~ sd dependance:
 sd=seq(0,100,by=0.05)
 Es=sapply(sd,function(x) E(temp(r,x)))
 plot(sd,Es,type="l")
-#gradient descent cycle
 
+#gradient descent cycle
 for(n in 1:40){
 l=0.5         #lambda
 K=100000     #number of grad descent steps
@@ -121,16 +121,31 @@ print(n)
 }
 
 #Molecular dynamic
-K=30000     #number of iterations
+#-----
+K=3000    #number of iterations
 dt=0.0001       #delta t (should be small for more precision)
+dt1=0.001
+dt2=0.01
 r=reinit(27)
 r=temp(r,sd=0.5)
+r1=r
+r2=r
 plot(r$x,r$y)
+Es=NULL
+Es1=NULL
+Es2=NULL
 for(i in 1:K){
   r[,1:2]=r[,1:2]+dt*r[,3:4]      #r step
   r[,3:4]=r[,3:4]-dt*gU(r)        #v step
-  print(E(r))
-  points(r$x,r$y)
+  r1[,1:2]=r1[,1:2]+dt1*r1[,3:4]      #r step
+  r1[,3:4]=r1[,3:4]-dt1*gU(r1)        #v step
+  r2[,1:2]=r2[,1:2]+dt2*r2[,3:4]      #r step
+  r2[,3:4]=r2[,3:4]-dt2*gU(r2)        #v step
+  #print(E(r))
+  #points(r$x,r$y)
+  Es=c(Es,E(r))
+  Es1=c(Es1,E(r1))
+  Es2=c(Es2,E(r2))
 }
 
   
