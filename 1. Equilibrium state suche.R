@@ -93,6 +93,21 @@ E<-function(r){
   N=dim(r)[1]
   U(r[,1:2])+sum(r$vx^2)/2+sum(r$vy^2)/2
 }
+descent=function(r,lambda=0.3,K=1000,print=FALSE){
+  l=lambda
+  for(k in 1:K){
+    gu=gU(r)
+    if(U(r-l*gu)<U(r)){
+      r=r-l*gu
+      l=lambda
+    }else{
+      l=l/5
+    }
+    if(print)print(U(r))
+  }
+  r
+}
+
 
 #checking deltaE ~ sd dependance:
 sd=seq(0,100,by=0.05)
