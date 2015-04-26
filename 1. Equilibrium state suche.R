@@ -107,7 +107,19 @@ descent=function(r,lambda=0.3,K=1000,print=FALSE){
   }
   r
 }
-
+T=function(r,K=10000,dt=0.01){    #returns temperature as an average across velocities + 
+                                    #full energy for troubleshooting
+  N=dim(r)[1]
+  Es=NULL
+  Vs=NULL
+  for(i in 1:K){
+    r[,1:2]=r[,1:2]+dt*r[,3:4]      #r step
+    r[,3:4]=r[,3:4]-dt*gU(r)        #v step
+    Es=c(Es,E(r))
+    Vs=c(Vs,sqrt(r$vx^2+r$vy^2))
+  }
+  list(T=mean(Vs^2),sdE=sd(Es),meanE=mean(Es))
+}
 
 #checking deltaE ~ sd dependance:
 sd=seq(0,100,by=0.05)
