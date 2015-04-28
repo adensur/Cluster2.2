@@ -113,14 +113,16 @@ macro=function(r,K=10000,dt=0.01){    #returns temperature as an average across 
   Es=NULL                   #volle Energie
   Vs=NULL                   #Geschwindigkeiten
   Rs=NULL                   #Radius
+  phi=NULL
   for(i in 1:K){
     r[,1:2]=r[,1:2]+dt*r[,3:4]      #r step
     r[,3:4]=r[,3:4]-dt*gU(r)        #v step
     Es=c(Es,E(r))
     Vs=c(Vs,sqrt(r$vx^2+r$vy^2))
     Rs=rbind(Rs,sqrt(r$x^2+r$y^2))
+    phi=rbind(phi,phiAll(r))
   }
-  list(T=mean(Vs^2),sdE=sd(Es),meanE=mean(Es),sdR=mean(apply(Rs,2,sd)))
+  list(T=mean(Vs^2),sdE=sd(Es),meanE=mean(Es),sdR=mean(apply(Rs,2,sd)),sdPhi=mean(apply(phi,2,sd)))
 }
 animate<-function(r,K=1000,dt=0.01){
   plot(r[,1:2])
@@ -133,7 +135,18 @@ animate<-function(r,K=1000,dt=0.01){
   }
   sd(Es)
 }
-
+phi<-function(r,i,j){#berechnet der winkel zwischen zwei vektoren
+  acos((r$x[i]*r$x[j]+r$y[i]*r$y[j])/(sqrt(r$x[i]^2+r$y[i]^2))/sqrt(r$x[j]^2+r$y[j]^2))
+}
+phiAll<-function(r){
+  df=cbind(0,r[,1:2],1:dim(r)[1])
+  df=merge(df,df,by="0")
+  df=df[df[,4]!=df[,7],]
+  acos((df$x.x*df$x.y+df$y.x*df$y.y)/(sqrt(df$x.x^2+df$y.x^2))/sqrt(df$x.y^2+df$y.y^2))
+}
+ro<-function(r){#berechnet der radius von allen partikeln
+  sqrt(r$x^2+r$y^2)
+}
 
 #checking deltaE ~ sd dependance:
 sd=seq(0,100,by=0.05)
