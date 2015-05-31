@@ -21,16 +21,16 @@ library(ggplot2)
 # plot(data=frame,meanE~temperature) 
 
 
-cl=makeCluster(6)
+cl=makeCluster(1)
 registerDoParallel(cl)
 
 sds=c(seq(1,0.5,by=-0.005),seq(0.45,0.05,by=-0.05))
 system.time({
   frame<-foreach(s=sds,.combine=rbind) %dopar% {
-    r=reinit(15)
+    r=reinit(13)
     r=temp(r,sd=s)
     r=r[order(ro(r)),]
-    x=macro(r,K=5000,dt=0.003)
+    x=macro(r,K=100,dt=0.003)
     c(x$T,x$sdE,x$meanE,x$sdR,x$sdPhi78)
   }
 })
