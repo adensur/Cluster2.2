@@ -1,39 +1,39 @@
-
 source("lib.R")
 
-cl=makeCluster(1)
-registerDoParallel(cl)
+temperatures2=NULL
+radial.sds2=NULL
 
-sds=c(seq(1,0.5,by=-0.005),seq(0.45,0.05,by=-0.05))
+sds=c(seq(0.001,0.15,by=0.006))
+
+
+
+sds=c(seq(0.001,0.15,by=0.001))
+#we need adequate sds to cover temperatures from 0 to about 0.5
+#that corresponds to sds of:
+N=13
+K=50000
 system.time({
-  frame<-foreach(s=sds,.combine=rbind) %dopar% {
-    r=reinit(13)
-    r=temp(r,sd=s)
-    r=r[order(ro(r)),]
-    x=macro(r,K=100,dt=0.003)
-    c(x$T,x$sdE,x$meanE,x$sdR,x$sdPhi78)
+  df=array(dim=c(N,4,K,length(sds)))
+  for(s in 1:length(sds)){
+    r=reinit(N)
+    r=temperature.create(r,sd=sds[s])
+    frame=molecular.dynamic(r,K=K,dt=0.01)
+    df[,,,s]=frame
   }
 })
-frame=data.frame(frame)
-frame=cbind(frame,sds)
-colnames(frame)=c("temperature","sdE","meanE","sdR","sdPhi78","sd")
-max(frame$sdE)
-#plot(data=frame,meanE~temperature)
-qplot(data=frame,x=temperature,y=sdPhi78)
-#qplot(data=frame,x=temperature,y=meanE,geom="point",main="Зависимость энергии от температуры", ylab="Полная энергия")+geom_smooth()
-#qplot(data=frame,x=temperature,y=sdR,geom=c("point","smooth"),
-      main="Зависимость среднеквадратичного отклонения по радиусу для 2х-мерного кластера из 15 частиц",
-      ylab="Среднеквадратичное отклонение", )
-#saveRDS(list(K=50000,dt=0.003,sds=c(seq(1,0.5,by=-0.005),seq(0.45,0.05,by=-0.05)),frame),"frame1.RDS")
+temperatures=apply(df,MARGIN = 4,temperature3)
+radial.sds=apply(df,MARGIN=4,sdR3)
+shell1.sds=apply(df,MARGIN=4,function(x) shell.sdR(x,inds=c(2,5,11,12)))
+shell2.sds=apply(df,MARGIN=4,function(x) shell.sdR(x,inds = c(1,3,4,6,7,8,9,10,13)))
+phi11=apply(df,MARGIN=4,function(x) sdPhi(x,ind1=2,inds2=c(5,11,12)))
+phi12=apply(df,MARGIN=4,function(x) sdPhi(x,ind1=2,inds2=c(1,3,4,6,7,8,9,10,13)))
+phi21=apply(df,MARGIN=4,function(x) sdPhi(x,ind1=1,inds2=c(5,11,12)))
+phi22=apply(df,MARGIN=4,function(x) sdPhi(x,ind1=1,inds2=c(3,4,6,7,8,9,10,13)))
 
+#temperatures2=c(temperatures2,temperatures)
+#radial.sds2=c(radial.sds2,radial.sds)
 
-
-stopCluster(cl)
-
-
-
-
-
-
-
+qplot(x=temperatures,y=phi22)
+qplot(x=temperatures,y=radial.sds)
+#animate.plot(df=df[,,,1])
 

@@ -1,9 +1,12 @@
 library(doParallel)
 library(ggplot2)
+
 init=function(N,sd=1){#generates N particles with x,y,z random coordinates
   x=rnorm(N,sd=sd)
   y=rnorm(N,sd=sd)
-  data.frame(x=x,y=y)
+ m=matrix(c(x,y),nrow=N,ncol=2)
+  colnames(m)=c("x","y")
+ m
 }
 U=function(r){#scalar function. Returns potential energy of r-type object
   N=dim(r)[1]
@@ -11,49 +14,15 @@ U=function(r){#scalar function. Returns potential energy of r-type object
   for(i in 2:N){
     ind[i]=N*(i-1)+i
   }
-  frame=data.frame(id="0",rx=r$x,ry=r$y)
+  frame=data.frame(id="0",rx=r[,1],ry=r[,2])
   x=merge(frame,frame,by="id")
   x=x[-ind,]
   y=(x[,4]-x[,2])^2+(x[,5]-x[,3])^2
   sum(y^(-3))/2+sum(r^2)
 }
-U3=function(r){
-  sum(mapply(function(xi,yi) {
-    sum(unlist(mapply(function(xk,yk) {
-      if(xi!=xk & yi!=yk){
-        ((xi-xk)^2+(yi-yk)^2)^(-3)
-      }
-    },r$x,r$y)))
-  },r$x,r$y))/2+sum(r$x^2)+sum(r$y^2)
-}#U rewritten as mapply(). It is not faster!
-U4=function(r){
-  N=dim(r)[1]
-  if(N>2){
-    sum(sapply(1:(N-1),function(i) {
-      sum(sapply((i+1):N,function(k){
-        ((r$x[i]-r$x[k])^2+(r$y[i]-r$y[k])^2)^(-3)
-      }))
-    }))+sum(r$x^2)+sum(r$y^2)
-  }
-  
-}#U rewritten as sapply(). It is not faster!
-U2=function(r){#scalar function. Returns potential energy of r-type object
-  N=dim(r)[1]
-  sum=0
-  for(i in 1:N){
-    sum1=0
-    if(i!=N){
-      for(j in (i+1):N){
-        sum1=sum1+sum((r[i,]-r[j,])^2)^(-3)
-      }
-    }
-    sum=sum+sum1+sum(r[i,]^2)
-  }
-  sum
-}#initial one
 gU=function(r){#returns gradient of r object in same, N*3, form
   N=dim(r)[1]
-  frame=data.frame(x=0,y=0)
+  frame=matrix(nrow=N,ncol=2)
   for(i in 1:N){
     for(j in 1:2){
       r2=r[-i,]
@@ -61,39 +30,29 @@ gU=function(r){#returns gradient of r object in same, N*3, form
       frame[i,j]=2*r[i,j]-6*sum(y)
     }
   }
+  colnames(frame)=c("x","y")
   frame
 }
-gU2=function(r){#returns gradient of r object in same, N*3, form
-  N=dim(r)[1]
-  frame=data.frame(x=0,y=0)
-  for(i in 1:N){
-    for(j in 1:2){
-      sum=0
-      for(k in 1:N){
-        if(k!=i){
-          sum=sum+(r[i,j]-r[k,j])/(sum((r[i,]-r[k,])^2)^4)
-        }
-      }
-      frame[i,j]=2*r[i,j]-6*sum
-    }
-  }
-  frame
-}#initial one
 reinit<-function(N=17){
-  readRDS(file=paste("data/",N,".RDS",sep=""))
+  as.matrix(readRDS(file=paste("data/",N,".RDS",sep="")))
 }
-#temperature function
-temp<-function(r, sd=1){
+temperature.create<-function(r, sd=1){
+  #gives some energy to system by assigning random displacements to the radius-vectors of the particles;
+  #finite temperature depends on sd, but has random component as well
   N=dim(r)[1]
   dx=rnorm(N,sd=sd)
   dy=rnorm(N,sd=sd)
-  data.frame(x=r$x-dx,y=r$y-dy,vx=0,vy=0)
+  m=matrix(c(r[,1]-dx,r[,2]-dy,rep(0,times=2*N)),nrow=N,ncol=4)
+  colnames(m)=c("x","y","vx","vy")
+  m
 }
 E<-function(r){
-  N=dim(r)[1]
-  U(r[,1:2])+sum(r$vx^2)/2+sum(r$vy^2)/2
+  #calculates full energy for a N*4 object. If an N*2 object is given, returns an error
+  U(r[,1:2])+sum(r[,3]^2)/2+sum(r[,4]^2)/2
 }
 descent=function(r,lambda=0.3,K=1000,print=FALSE){
+  #calculates gradient descent for a given N*2 vector r;
+  #returns a N*2 vector of radiuses of system, corresponding (hopefully) to an equilibrium state
   l=lambda
   for(k in 1:K){
     gu=gU(r)
@@ -107,46 +66,40 @@ descent=function(r,lambda=0.3,K=1000,print=FALSE){
   }
   r
 }
-macro=function(r,K=10000,dt=0.01){    #returns temperature as an average across velocities + 
-  #full energy for troubleshooting
-  N=dim(r)[1]
-  Es=NULL                   #volle Energie
-  Vs=NULL                   #Geschwindigkeiten
-  Rs=NULL                   #Radius
-  phi=NULL
+molecular.dynamic<-function(r,K=10000,dt=0.01){
+  #calculates a 3-dimensional array corresponding to consequent states of system.
+  #complete information is preserved
+  df=array(dim = c(dim(r),K))
   for(i in 1:K){
     r[,1:2]=r[,1:2]+dt*r[,3:4]      #r step
     r[,3:4]=r[,3:4]-dt*gU(r)        #v step
-    Es=c(Es,E(r))
-    Vs=c(Vs,sqrt(r$vx^2+r$vy^2))
-    Rs=rbind(Rs,sqrt(r$x^2+r$y^2))
-    phi=rbind(phi,phiAll(r))
-  }
-  list(T=mean(Vs^2),sdE=sd(Es),meanE=mean(Es),sdR=mean(apply(Rs,2,sd)),sdPhi=mean(apply(phi,2,sd)))
-}
-temperature<-function(r,K=1000,dt=0.01){
-  #returns temperature as an average across velocities + 
-  #full energy for troubleshooting
-  N=dim(r)[1]
-  Vs=NULL                   #Geschwindigkeiten
-  for(i in 1:K){
-    r[,1:2]=r[,1:2]+dt*r[,3:4]      #r step
-    r[,3:4]=r[,3:4]-dt*gU(r)        #v step
-    Vs=c(Vs,sqrt(r$vx^2+r$vy^2))
-  }
-  list(T=mean(Vs^2))
-}
-animate.calc<-function(r,K=1000,dt=0.01){
-  Es=NULL
-  df=array(dim=c(dim(r),K))
-  for(i in 1:K){
-    r[,1:2]=r[,1:2]+dt*r[,3:4] #r schritt
-    r[,3:4]=r[,3:4]-dt*gU(r)   #v schritt
-    df[,,i]=as.matrix(r)
+    df[,,i]=r
   }
   df
 }
-animate.plot<-function(df,skip=10,xlim,ylim){
+temperature3<-function(df){
+  #3d-array function, calculating temperature across an array df of consequent states of the system,
+  #as provided by molecular.dynamic function.
+  #if input df has dimensions N*4*K, where N - number of particles, K - number of MD steps,
+  #the function returns 1 value of temperature. Bigger K give more precise temperature
+  velocity<-function(r){
+    sqrt(r[,3]^2+r[,4]^2)
+  }
+  velocities=unclass(apply(df,MARGIN=3,velocity))
+  result=mean(velocities^2)
+  names(result)="Temperature"
+  result
+}
+sdE3<-function(df){
+  #3d-array function of energy standard deviation;
+  #receives a df object of size N*4*K, where N is the number of particles and K is number of MD steps,
+  #as provided by molecular.dynamic() function.
+  energies=apply(df,MARGIN=3,E)
+  result=sd(energies)
+  names(result)="energy.sd"
+  result
+}
+animate.plot<-function(df,skip=10,xlim=c(-2,2),ylim=c(-2,2)){
   rr=data.frame(df[,,1])
   plot(rr[,1],rr[,2],xlim=xlim,ylim=ylim)
   K=dim(df)[3]
@@ -155,15 +108,43 @@ animate.plot<-function(df,skip=10,xlim,ylim){
     points(rr[,1],rr[,2])
   }
 }
-phi<-function(r,i,j){#berechnet der winkel zwischen zwei vektoren
-  acos((r$x[i]*r$x[j]+r$y[i]*r$y[j])/(sqrt(r$x[i]^2+r$y[i]^2))/sqrt(r$x[j]^2+r$y[j]^2))
+
+
+sdR3<-function(df){
+  ro<-function(r){#berechnet der radius von allen partikeln
+    sqrt(r[,1]^2+r[,2]^2)
+  }
+  radii=apply(df,MARGIN=3,ro)
+  sds=apply(radii,MARGIN=1,sd)
+  result=mean(sds)
+  names(result)="radial.sd"
+  result
 }
-phiAll<-function(r){
-  df=cbind(0,r[,1:2],1:dim(r)[1])
-  df=merge(df,df,by="0")
-  df=df[df[,4]!=df[,7],]
-  acos((df$x.x*df$x.y+df$y.x*df$y.y)/(sqrt(df$x.x^2+df$y.x^2))/sqrt(df$x.y^2+df$y.y^2))
+shell.sdR<-function(df,inds){
+  #calculates sd of radii of particles within certain shell (specified by indices of the particles - inds)
+  radii=apply(df,MARGIN=3,ro)
+  sds=apply(radii[inds,],MARGIN=1,sd)
+  result=mean(sds)
+  names(result)="shell.radial.sd"
+  result
 }
 ro<-function(r){#berechnet der radius von allen partikeln
-  sqrt(r$x^2+r$y^2)
+  sqrt(r[,1]^2+r[,2]^2)
 }
+sdPhi<-function(df,ind1,inds2){
+  phis=apply(df,MARGIN=3,function(x) phi(x,ind1,inds2))
+  sds=apply(phis,MARGIN=1,sd)
+  result=mean(sds)
+  names(result)="shell.phi.sd"
+  result
+}
+
+phi<-function(r,i,j){#berechnet der winkel zwischen zwei vektoren
+  acos((r[i,1]*r[j,1]+r[i,2]*r[j,2])/(sqrt(r[i,1]^2+r[i,2]^2))/sqrt(r[j,1]^2+r[j,2]^2))
+}
+# phiAll<-function(r){
+#   df=cbind(0,r[,1:2],1:dim(r)[1])
+#   df=merge(df,df,by="0")
+#   df=df[df[,4]!=df[,7],]
+#   acos((df$x.x*df$x.y+df$y.x*df$y.y)/(sqrt(df$x.x^2+df$y.x^2))/sqrt(df$x.y^2+df$y.y^2))
+# }
