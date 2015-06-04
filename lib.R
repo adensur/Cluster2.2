@@ -1,5 +1,35 @@
 library(doParallel)
 library(ggplot2)
+rotate<-function(r,dphi=0.001,inds){
+  #rotates one shell in respect to another;
+  #shell is specified by inds
+  r2=r
+  r2[inds,1]=r[inds,1]*cos(dphi)-r[inds,2]*sin(dphi)
+  r2[inds,2]=r[inds,1]*sin(dphi)-r[inds,2]*cos(dphi)
+  r2
+}
+search<-function(r,fixed,K=10000){
+  #finds a potential minimum for a cluster, where 'fixed' specifies indices of the particles, that had to be fixed 
+  #(their angle is held constant, and only radius varies)
+  lambda=1
+  N=dim(r)[1]
+  U1=U(r)
+  for(i in 1:K){
+    r2=r
+    r2[-fixed,1]=r2[-fixed,1]+lambda*rnorm(N-2)
+    r2[-fixed,2]=r2[-fixed,2]+lambda*rnorm(N-2)
+    r2[fixed,]=r2[fixed,]*(1+lambda*rnorm(2))
+    U2=U(r2)
+    if(U2<U1){
+      r=r2
+      U1=U2
+      lambda=1
+    }else{
+      lambda=lambda*0.9
+    }
+  }
+  r2
+}
 
 init=function(N,sd=1){#generates N particles with x,y,z random coordinates
   x=rnorm(N,sd=sd)

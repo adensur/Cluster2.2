@@ -10,7 +10,7 @@ sds=c(seq(0.001,0.15,by=0.006))
 sds=c(seq(0.001,0.15,by=0.001))
 #we need adequate sds to cover temperatures from 0 to about 0.5
 #that corresponds to sds of:
-N=14
+N=16
 K=50000
 system.time({
   df=array(dim=c(N,4,K,length(sds)))
@@ -43,7 +43,7 @@ frame=data.frame(temperature=temperatures,radial.sd=radial.sds,inner.shell.radia
                  phi11=phi11,phi12=phi12)
 write.csv(frame,"frame14.csv")
 qplot(data=frame,x=temperatures,y=radial.sd)
-saveRDS(df,"df13K50000.RDS")
+saveRDS(df,"df16K50000.RDS")
 
 
 
