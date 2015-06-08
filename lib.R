@@ -5,7 +5,7 @@ rotate<-function(r,dphi=0.001,inds){
   #shell is specified by inds
   r2=r
   r2[inds,1]=r[inds,1]*cos(dphi)-r[inds,2]*sin(dphi)
-  r2[inds,2]=r[inds,1]*sin(dphi)-r[inds,2]*cos(dphi)
+  r2[inds,2]=r[inds,1]*sin(dphi)+r[inds,2]*cos(dphi)
   r2
 }
 search<-function(r,fixed,K=10000){
@@ -28,7 +28,7 @@ search<-function(r,fixed,K=10000){
       lambda=lambda*0.9
     }
   }
-  r2
+  r
 }
 
 init=function(N,sd=1){#generates N particles with x,y,z random coordinates
