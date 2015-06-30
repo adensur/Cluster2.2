@@ -8,6 +8,33 @@ rotate<-function(r,dphi=0.001,inds){
   r2[inds,2]=r[inds,1]*sin(dphi)+r[inds,2]*cos(dphi)
   r2
 }
+radial_displace<-function(r,dr=0.001,ind){
+        #displaces one particle, specified by ind, away
+        #from center; if dr>0, ind better belong to inner shell, and vice versa
+        r[ind,1:2]=r[ind,1:2]*(1+dr)
+        r
+}
+search2<-function(r,fixed,K=10000){
+        #finds a potential minimum for a cluster, where 'fixed' specifies indice of the particle, that had to be fixed 
+        #(totally fixed, for finding equilibrium for radial displacement)
+        lambda=1
+        N=dim(r)[1]
+        U1=U(r)
+        for(i in 1:K){
+                r2=r
+                r2[-fixed,1]=r2[-fixed,1]+lambda*rnorm(N-1)
+                r2[-fixed,2]=r2[-fixed,2]+lambda*rnorm(N-1)
+                U2=U(r2)
+                if(U2<U1){
+                        r=r2
+                        U1=U2
+                        lambda=1
+                }else{
+                        lambda=lambda*0.9
+                }
+        }
+        r
+}
 search<-function(r,fixed,K=10000){
   #finds a potential minimum for a cluster, where 'fixed' specifies indices of the particles, that had to be fixed 
   #(their angle is held constant, and only radius varies)
