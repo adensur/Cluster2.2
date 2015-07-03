@@ -6,7 +6,7 @@ r0=reinit(14)
 dd=NULL
 
 K=10000
-d=dphis[4]
+d=0.582
         r=rotate(r0,dphi=d,inds=c(1,7,9,14))
         r2=r
 
@@ -22,5 +22,5 @@ qplot(x=dd,y=Us,geom="point")
 
 
 frame=data.frame(dphis=dd,Us=Us)
-#write.csv(frame,"barrier14.csv")
+write.csv(frame,"barrier14.csv")
 
